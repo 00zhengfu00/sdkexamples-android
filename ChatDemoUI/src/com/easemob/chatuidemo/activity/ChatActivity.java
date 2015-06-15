@@ -67,6 +67,7 @@ import android.widget.Toast;
 import com.easemob.EMChatRoomChangeListener;
 import com.easemob.EMError;
 import com.easemob.EMEventListener;
+import com.easemob.EMGroupChangeListener;
 import com.easemob.EMNotifierEvent;
 import com.easemob.EMValueCallBack;
 import com.easemob.applib.controller.HXSDKHelper;
@@ -93,7 +94,6 @@ import com.easemob.chatuidemo.adapter.ExpressionAdapter;
 import com.easemob.chatuidemo.adapter.ExpressionPagerAdapter;
 import com.easemob.chatuidemo.adapter.MessageAdapter;
 import com.easemob.chatuidemo.adapter.VoicePlayClickListener;
-import com.easemob.chatuidemo.domain.User;
 import com.easemob.chatuidemo.utils.CommonUtils;
 import com.easemob.chatuidemo.utils.ImageUtils;
 import com.easemob.chatuidemo.utils.SmileUtils;
@@ -191,8 +191,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 
 	private SwipeRefreshLayout swipeRefreshLayout;
 
-	private boolean isRobot;
-	
 	private Handler micImageHandler = new Handler() {
 		@Override
 		public void handleMessage(android.os.Message msg) {
@@ -238,6 +236,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		iv_emoticons_checked.setVisibility(View.INVISIBLE);
 		more = findViewById(R.id.more);
 		edittext_layout.setBackgroundResource(R.drawable.input_bar_bg_normal);
+		voiceCallBtn = (ImageView) findViewById(R.id.btn_voice_call);
+		videoCallBtn = (ImageView) findViewById(R.id.btn_video_call);
 
 		// 动画资源文件,用于录制语音时
 		micImages = new Drawable[] { getResources().getDrawable(R.drawable.record_animate_01),
@@ -378,14 +378,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 
 		if (chatType == CHATTYPE_SINGLE) { // 单聊
 			toChatUsername = getIntent().getStringExtra("userId");
-			isRobot = getIntent().getBooleanExtra("isRobot", false);
-			User user = ((DemoHXSDKHelper)DemoHXSDKHelper.getInstance()).getContactList().get(toChatUsername);
-			if (user != null && user.getNick() != null) {
-				((TextView) findViewById(R.id.name)).setText(user.getNick());
-			} else {
-				((TextView) findViewById(R.id.name)).setText(toChatUsername);
-			}
-				
+			((TextView) findViewById(R.id.name)).setText(toChatUsername);
 		} else {
 			// 群聊
 			findViewById(R.id.container_to_group).setVisibility(View.VISIBLE);
@@ -661,7 +654,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 				double longitude = data.getDoubleExtra("longitude", 0);
 				String locationAddress = data.getStringExtra("address");
 				if (locationAddress != null && !locationAddress.equals("")) {
-					more(more);
+				    toggleMore(more);
 					sendLocationMsg(latitude, longitude, "", locationAddress);
 				} else {
 					String st = getResources().getString(R.string.unable_to_get_loaction);
@@ -735,15 +728,21 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		} else if (id == R.id.btn_voice_call) { // 点击语音电话图标
 			if (!EMChatManager.getInstance().isConnected())
 				Toast.makeText(this, st1, 0).show();
-			else
+			else{
 				startActivity(new Intent(ChatActivity.this, VoiceCallActivity.class).putExtra("username",
 						toChatUsername).putExtra("isComingCall", false));
+				voiceCallBtn.setEnabled(false);
+				toggleMore(null);
+			}
 		} else if (id == R.id.btn_video_call) { // 视频通话
 			if (!EMChatManager.getInstance().isConnected())
 				Toast.makeText(this, st1, 0).show();
-			else
+			else{
 				startActivity(new Intent(this, VideoCallActivity.class).putExtra("username", toChatUsername).putExtra(
 						"isComingCall", false));
+				videoCallBtn.setEnabled(false);
+				toggleMore(null);
+			}
 		}
 	}
 
@@ -907,10 +906,6 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 			message.addBody(txtBody);
 			// 设置要发给谁,用户username或者群聊groupid
 			message.setReceipt(toChatUsername);
-			//判断是否为botUser
-			if(isRobot){
-				message.setAttribute("em_robot_message", true);
-			}
 			// 把messgage加到conversation中
 			conversation.addMessage(message);
 			// 通知adapter有消息变动，adapter会根据加入的这条message显示消息和调用sdk的发送方法
@@ -1234,7 +1229,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 * 
 	 * @param view
 	 */
-	public void more(View view) {
+	public void toggleMore(View view) {
 		if (more.getVisibility() == View.GONE) {
 			EMLog.d(TAG, "more gone");
 			hideKeyboard();
@@ -1271,6 +1266,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	}
 
 	private PowerManager.WakeLock wakeLock;
+    private ImageView voiceCallBtn;
+    private ImageView videoCallBtn;
 
 	/**
 	 * 按住说话listener
@@ -1450,6 +1447,8 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		super.onResume();
 		if (group != null)
 			((TextView) findViewById(R.id.name)).setText(group.getGroupName());
+		voiceCallBtn.setEnabled(true);
+		videoCallBtn.setEnabled(true);
 
 		 if(adapter != null){
 		     adapter.refresh();
