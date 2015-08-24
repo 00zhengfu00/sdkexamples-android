@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
@@ -34,9 +33,7 @@ import android.widget.Toast;
 
 import com.easemob.EMCallBack;
 import com.easemob.applib.controller.HXSDKHelper;
-import com.easemob.applib.utils.HXPreferenceUtils;
 import com.easemob.chat.EMChatManager;
-import com.easemob.chat.EMContactManager;
 import com.easemob.chat.EMGroupManager;
 import com.easemob.chatuidemo.Constant;
 import com.easemob.chatuidemo.DemoApplication;
@@ -45,9 +42,6 @@ import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.db.UserDao;
 import com.easemob.chatuidemo.domain.User;
 import com.easemob.chatuidemo.utils.CommonUtils;
-import com.easemob.exceptions.EaseMobException;
-import com.easemob.util.EMLog;
-import com.easemob.util.HanziToPinyin;
 
 /**
  * 登陆页面
@@ -164,7 +158,7 @@ public class LoginActivity extends BaseActivity {
 					runOnUiThread(new Runnable() {
 						public void run() {
 							pd.dismiss();
-							DemoApplication.getInstance().logout(null);
+							DemoHXSDKHelper.getInstance().logout(true,null);
 							Toast.makeText(getApplicationContext(), R.string.login_failure_failed, 1).show();
 						}
 					});
@@ -224,9 +218,17 @@ public class LoginActivity extends BaseActivity {
 		groupUser.setNick(strGroup);
 		groupUser.setHeader("");
 		userlist.put(Constant.GROUP_USERNAME, groupUser);
-
+		
+		// 添加"Robot"
+		User robotUser = new User();
+		String strRobot = getResources().getString(R.string.robot_chat);
+		robotUser.setUsername(Constant.CHAT_ROBOT);
+		robotUser.setNick(strRobot);
+		robotUser.setHeader("");
+		userlist.put(Constant.CHAT_ROBOT, robotUser);
+		
 		// 存入内存
-		DemoApplication.getInstance().setContactList(userlist);
+		((DemoHXSDKHelper)HXSDKHelper.getInstance()).setContactList(userlist);
 		// 存入db
 		UserDao dao = new UserDao(LoginActivity.this);
 		List<User> users = new ArrayList<User>(userlist.values());

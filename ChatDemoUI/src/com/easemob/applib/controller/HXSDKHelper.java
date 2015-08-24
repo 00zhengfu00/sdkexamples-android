@@ -17,10 +17,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.R.bool;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.easemob.EMCallBack;
 import com.easemob.EMConnectionListener;
@@ -130,6 +132,9 @@ public abstract class HXSDKHelper {
 	private boolean isBlackListSyncedWithServer = false;
 	
 	private boolean alreadyNotified = false;
+	
+	public boolean isVoiceCalling;
+    public boolean isVideoCalling;
 
     protected HXSDKHelper(){
         me = this;
@@ -187,7 +192,6 @@ public abstract class HXSDKHelper {
         EMChat.getInstance().init(context);
         
         // 设置sandbox测试环境
-        // 建议开发者开发时设置此模式
         if(hxModel.isSandboxMode()){
             EMChat.getInstance().setEnv(EMEnvMode.EMSandboxMode);
         }
@@ -306,10 +310,10 @@ public abstract class HXSDKHelper {
     /**
      * logout HuanXin SDK
      */
-    public void logout(final EMCallBack callback){
+    public void logout(final boolean unbindDeviceToken,final EMCallBack callback){
         setPassword(null);
         reset();
-        EMChatManager.getInstance().logout(new EMCallBack(){
+        EMChatManager.getInstance().logout(unbindDeviceToken,new EMCallBack(){
 
             @Override
             public void onSuccess() {
@@ -319,7 +323,10 @@ public abstract class HXSDKHelper {
             }
 
             @Override
-            public void onError(int code, String message) {                
+            public void onError(int code, String message) { 
+            	if(callback != null){
+            		callback.onError(code, message);
+            	}
             }
 
             @Override

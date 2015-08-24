@@ -106,7 +106,7 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
 		    holder.avatar.setImageResource(R.drawable.new_friends_icon);
 			if(user.getUnreadMsgCount() > 0){
 			    holder.unreadMsgView.setVisibility(View.VISIBLE);
-			    holder.unreadMsgView.setText(user.getUnreadMsgCount()+"");
+//			    holder.unreadMsgView.setText(user.getUnreadMsgCount()+"");
 			}else{
 			    holder.unreadMsgView.setVisibility(View.INVISIBLE);
 			}
@@ -118,8 +118,12 @@ public class ContactAdapter extends ArrayAdapter<User>  implements SectionIndexe
             //群聊item
             holder.nameTextview.setText(user.getNick());
             holder.avatar.setImageResource(R.drawable.groups_icon);
+		}else if(username.equals(Constant.CHAT_ROBOT)){
+			//Robot item
+			holder.nameTextview.setText(user.getNick());
+			holder.avatar.setImageResource(R.drawable.groups_icon);
 		}else{
-		    holder.nameTextview.setText(username);
+		    holder.nameTextview.setText(user.getNick());
 		    //设置用户头像
 			UserUtils.setUserAvatar(getContext(), username, holder.avatar);
 			if(holder.unreadMsgView != null)

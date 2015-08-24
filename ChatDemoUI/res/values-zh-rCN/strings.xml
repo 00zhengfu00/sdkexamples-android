@@ -200,7 +200,7 @@
     <string name="User_name_cannot_be_empty">用户名不能为空！</string>
     <string name="Password_cannot_be_empty">密码不能为空！</string>
     <string name="please_set_the_current">设置当前用户的昵称\n用于ios离线推送时显示用户昵称</string>
-    <string name="Is_landing">正在登陆...</string>
+    <string name="Is_landing">正在登录...</string>
     <string name="list_is_for">将在后台获取好友和群聊列表...</string>
     <string name="login_failure_failed">登录失败: 获取好友或群聊失败</string>
     <string name="Login_failed">登录失败:</string>
@@ -286,4 +286,23 @@
     <string name="searching">正在搜索..</string>
     <string name="hanging_up">正在挂断..</string>
     <string name="illegal_user_name">用户名不合法</string>
+    <string name="robot_chat">环信小助手</string>
+    <string name="title_user_profile">个人资料</string>
+    <string name="title_search_history">查询历史记录</string>
+    <string name="nickname">昵称</string>
+    <string name="dl_title_upload_photo">上传头像</string>
+    <string name="dl_msg_local_upload">本地上传</string>
+    <string name="dl_msg_take_photo">拍照上传</string>
+    <string name="toast_no_support">暂不支持！</string>
+    <string name="setting_nickname">设置昵称</string>
+    <string name="dl_ok">确定</string>
+    <string name="dl_cancel">取消</string>
+    <string name="toast_nick_not_isnull">昵称不能为空！</string>
+    <string name="dl_update_nick">更新昵称</string>
+    <string name="dl_update_photo">更新头像</string>
+    <string name="dl_waiting">请等待...</string>
+    <string name="toast_updatenick_success">更新昵称成功!</string>
+    <string name="toast_updatenick_fail">更新昵称失败!</string>
+    <string name="toast_updatephoto_success">更新头像成功!</string>
+    <string name="toast_updatephoto_fail">更新头像失败!</string>
 </resources>

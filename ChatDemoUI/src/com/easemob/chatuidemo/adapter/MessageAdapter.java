@@ -15,16 +15,21 @@ package com.easemob.chatuidemo.adapter;
 
 import java.io.File;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
@@ -48,6 +53,7 @@ import android.widget.Toast;
 
 import com.easemob.EMCallBack;
 import com.easemob.EMError;
+import com.easemob.applib.controller.HXSDKHelper;
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMMessage;
@@ -62,6 +68,7 @@ import com.easemob.chat.TextMessageBody;
 import com.easemob.chat.VideoMessageBody;
 import com.easemob.chat.VoiceMessageBody;
 import com.easemob.chatuidemo.Constant;
+import com.easemob.chatuidemo.DemoHXSDKHelper;
 import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.activity.AlertDialog;
 import com.easemob.chatuidemo.activity.BaiduMapActivity;
@@ -70,6 +77,7 @@ import com.easemob.chatuidemo.activity.ContextMenu;
 import com.easemob.chatuidemo.activity.ShowBigImage;
 import com.easemob.chatuidemo.activity.ShowNormalFileActivity;
 import com.easemob.chatuidemo.activity.ShowVideoActivity;
+import com.easemob.chatuidemo.activity.UserProfileActivity;
 import com.easemob.chatuidemo.task.LoadImageTask;
 import com.easemob.chatuidemo.task.LoadVideoImageTask;
 import com.easemob.chatuidemo.utils.DateUtils;
@@ -78,11 +86,11 @@ import com.easemob.chatuidemo.utils.ImageUtils;
 import com.easemob.chatuidemo.utils.SmileUtils;
 import com.easemob.chatuidemo.utils.UserUtils;
 import com.easemob.exceptions.EaseMobException;
+import com.easemob.util.DensityUtil;
 import com.easemob.util.EMLog;
 import com.easemob.util.FileUtils;
 import com.easemob.util.LatLng;
 import com.easemob.util.TextFormater;
-import com.umeng.analytics.MobclickAgent;
 
 public class MessageAdapter extends BaseAdapter{
 
@@ -104,6 +112,8 @@ public class MessageAdapter extends BaseAdapter{
 	private static final int MESSAGE_TYPE_RECV_VOICE_CALL = 13;
 	private static final int MESSAGE_TYPE_SENT_VIDEO_CALL = 14;
 	private static final int MESSAGE_TYPE_RECV_VIDEO_CALL = 15;
+	private static final int MESSAGE_TYPE_SENT_ROBOT_MENU = 16;
+	private static final int MESSAGE_TYPE_RECV_ROBOT_MENU = 17;
 
 	public static final String IMAGE_DIR = "chat/image/";
 	public static final String VOICE_DIR = "chat/audio/";
@@ -224,7 +234,7 @@ public class MessageAdapter extends BaseAdapter{
 	 * 获取item类型数
 	 */
 	public int getViewTypeCount() {
-        return 16;
+        return 18;
     }
 
 	/**
@@ -240,7 +250,10 @@ public class MessageAdapter extends BaseAdapter{
 			    return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_VOICE_CALL : MESSAGE_TYPE_SENT_VOICE_CALL;
 			else if (message.getBooleanAttribute(Constant.MESSAGE_ATTR_IS_VIDEO_CALL, false))
 			    return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_VIDEO_CALL : MESSAGE_TYPE_SENT_VIDEO_CALL;
-			return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_TXT : MESSAGE_TYPE_SENT_TXT;
+			else if(((DemoHXSDKHelper)HXSDKHelper.getInstance()).isRobotMenuMessage(message))
+				return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_ROBOT_MENU : MESSAGE_TYPE_SENT_ROBOT_MENU;
+			else
+				return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_TXT : MESSAGE_TYPE_SENT_TXT;
 		}
 		if (message.getType() == EMMessage.Type.IMAGE) {
 			return message.direct == EMMessage.Direct.RECEIVE ? MESSAGE_TYPE_RECV_IMAGE : MESSAGE_TYPE_SENT_IMAGE;
@@ -288,10 +301,15 @@ public class MessageAdapter extends BaseAdapter{
 						.inflate(R.layout.row_sent_voice_call, null);
 			// 视频通话
 			else if (message.getBooleanAttribute(Constant.MESSAGE_ATTR_IS_VIDEO_CALL, false))
-			    return message.direct == EMMessage.Direct.RECEIVE ? inflater.inflate(R.layout.row_received_video_call, null) : inflater
-                        .inflate(R.layout.row_sent_video_call, null);
-			return message.direct == EMMessage.Direct.RECEIVE ? inflater.inflate(R.layout.row_received_message, null) : inflater.inflate(
-					R.layout.row_sent_message, null);
+				return message.direct == EMMessage.Direct.RECEIVE ? inflater.inflate(R.layout.row_received_video_call,
+						null) : inflater.inflate(R.layout.row_sent_video_call, null);
+			// 含有菜单的消息	
+			else if (((DemoHXSDKHelper)HXSDKHelper.getInstance()).isRobotMenuMessage(message))
+				return message.direct == EMMessage.Direct.RECEIVE ? inflater.inflate(R.layout.row_received_menu, null)
+						: inflater.inflate(R.layout.row_sent_message, null);
+			else
+				return message.direct == EMMessage.Direct.RECEIVE ? inflater.inflate(R.layout.row_received_message,
+						null) : inflater.inflate(R.layout.row_sent_message, null);
 		}
 	}
 
@@ -323,6 +341,9 @@ public class MessageAdapter extends BaseAdapter{
 					// 这里是文字内容
 					holder.tv = (TextView) convertView.findViewById(R.id.tv_chatcontent);
 					holder.tv_usernick = (TextView) convertView.findViewById(R.id.tv_userid);
+					
+					holder.tvTitle = (TextView) convertView.findViewById(R.id.tvTitle);
+					holder.tvList = (LinearLayout) convertView.findViewById(R.id.ll_layout);
 				} catch (Exception e) {
 				}
 
@@ -394,12 +415,15 @@ public class MessageAdapter extends BaseAdapter{
 		}
 
 		// 群聊时，显示接收的消息的发送人的名称
-		if ((chatType == ChatType.GroupChat || chatType == chatType.ChatRoom) && message.direct == EMMessage.Direct.RECEIVE){
+		if ((chatType == ChatType.GroupChat || chatType == ChatType.ChatRoom) && message.direct == EMMessage.Direct.RECEIVE){
 		    //demo里使用username代码nick
-			holder.tv_usernick.setText(message.getFrom());
+			UserUtils.setUserNick(message.getFrom(), holder.tv_usernick);
+		}
+		if(message.direct == EMMessage.Direct.SEND){
+			UserUtils.setCurrentUserNick(holder.tv_usernick);
 		}
 		// 如果是发送的消息并且不是群聊消息，显示已读textview
-		if (!(chatType == ChatType.GroupChat || chatType == chatType.ChatRoom) && message.direct == EMMessage.Direct.SEND) {
+		if (!(chatType == ChatType.GroupChat || chatType == ChatType.ChatRoom) && message.direct == EMMessage.Direct.SEND) {
 			holder.tv_ack = (TextView) convertView.findViewById(R.id.tv_ack);
 			holder.tv_delivered = (TextView) convertView.findViewById(R.id.tv_delivered);
 			if (holder.tv_ack != null) {
@@ -450,6 +474,9 @@ public class MessageAdapter extends BaseAdapter{
 			        || message.getBooleanAttribute(Constant.MESSAGE_ATTR_IS_VIDEO_CALL, false))
 			    // 音视频通话
 			    handleCallMessage(message, holder, position);
+			else if(((DemoHXSDKHelper)HXSDKHelper.getInstance()).isRobotMenuMessage(message))
+				//含有列表的消息
+				handleRobotMenuMessage(message, holder, position);
 			else
 			    handleTextMessage(message, holder, position);
 			break;
@@ -500,7 +527,7 @@ public class MessageAdapter extends BaseAdapter{
 
 		} else {
 			final String st = context.getResources().getString(R.string.Into_the_blacklist);
-			if(chatType != ChatType.ChatRoom){
+			if(!((ChatActivity)activity).isRobot && chatType != ChatType.ChatRoom){
 				// 长按头像，移入黑名单
 				holder.iv_avatar.setOnLongClickListener(new OnLongClickListener() {
 
@@ -541,13 +568,23 @@ public class MessageAdapter extends BaseAdapter{
 	 * @param message
 	 * @param imageView
 	 */
-	private void setUserAvatar(EMMessage message, ImageView imageView){
+	private void setUserAvatar(final EMMessage message, ImageView imageView){
 	    if(message.direct == Direct.SEND){
 	        //显示自己头像
-	        UserUtils.setUserAvatar(context, EMChatManager.getInstance().getCurrentUser(), imageView);
+	        UserUtils.setCurrentUserAvatar(context, imageView);
 	    }else{
 	        UserUtils.setUserAvatar(context, message.getFrom(), imageView);
 	    }
+	    imageView.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent();
+				intent.setClass(context, UserProfileActivity.class);
+				intent.putExtra("username", message.getFrom());
+				context.startActivity(intent);
+			}
+		});
 	}
 
 	/**
@@ -573,6 +610,71 @@ public class MessageAdapter extends BaseAdapter{
 			}
 		});
 
+		if (message.direct == EMMessage.Direct.SEND) {
+			switch (message.status) {
+			case SUCCESS: // 发送成功
+				holder.pb.setVisibility(View.GONE);
+				holder.staus_iv.setVisibility(View.GONE);
+				break;
+			case FAIL: // 发送失败
+				holder.pb.setVisibility(View.GONE);
+				holder.staus_iv.setVisibility(View.VISIBLE);
+				break;
+			case INPROGRESS: // 发送中
+				holder.pb.setVisibility(View.VISIBLE);
+				holder.staus_iv.setVisibility(View.GONE);
+				break;
+			default:
+				// 发送消息
+				sendMsgInBackground(message, holder);
+			}
+		}
+	}
+	
+	private void setRobotMenuMessageLayout(LinearLayout parentView,JSONArray jsonArr){
+		try {
+			parentView.removeAllViews();
+			for (int i = 0; i < jsonArr.length(); i++) {
+				final String itemStr = jsonArr.getString(i);
+				final TextView textView = new TextView(context);
+				textView.setText(itemStr);
+				textView.setTextSize(15);
+				try {
+					XmlPullParser xrp = context.getResources().getXml(R.drawable.menu_msg_text_color);
+					textView.setTextColor(ColorStateList.createFromXml(context.getResources(), xrp));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				textView.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						((ChatActivity)context).sendText(itemStr);
+					}
+				});
+				LinearLayout.LayoutParams llLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+				llLp.bottomMargin = DensityUtil.dip2px(context, 3);
+				llLp.topMargin = DensityUtil.dip2px(context, 3);
+				parentView.addView(textView, llLp);
+			}
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		
+		
+	}
+	private void handleRobotMenuMessage(EMMessage message, ViewHolder holder, final int postion){
+		try {
+			JSONObject jsonObj = message.getJSONObjectAttribute(Constant.MESSAGE_ATTR_ROBOT_MSGTYPE);
+			if(jsonObj.has("choice")){
+				JSONObject jsonChoice = jsonObj.getJSONObject("choice");
+				String title = jsonChoice.getString("title");
+				holder.tvTitle.setText(title);
+				setRobotMenuMessageLayout(holder.tvList, jsonChoice.getJSONArray("list"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if (message.direct == EMMessage.Direct.SEND) {
 			switch (message.status) {
 			case SUCCESS: // 发送成功
@@ -863,7 +965,13 @@ public class MessageAdapter extends BaseAdapter{
 	 */
 	private void handleVoiceMessage(final EMMessage message, final ViewHolder holder, final int position, View convertView) {
 		VoiceMessageBody voiceBody = (VoiceMessageBody) message.getBody();
-		holder.tv.setText(voiceBody.getLength() + "\"");
+		int len = voiceBody.getLength();
+		if(len>0){
+			holder.tv.setText(voiceBody.getLength() + "\"");
+			holder.tv.setVisibility(View.VISIBLE);
+		}else{
+			holder.tv.setVisibility(View.INVISIBLE);
+		}
 		holder.iv.setOnClickListener(new VoicePlayClickListener(message, holder.iv, holder.iv_read_status, this, activity, username));
 		holder.iv.setOnLongClickListener(new OnLongClickListener() {
 			@Override
@@ -1440,6 +1548,9 @@ public class MessageAdapter extends BaseAdapter{
 		TextView tv_file_name;
 		TextView tv_file_size;
 		TextView tv_file_download_state;
+		
+		TextView tvTitle;
+		LinearLayout tvList;
 	}
 
 	/*
