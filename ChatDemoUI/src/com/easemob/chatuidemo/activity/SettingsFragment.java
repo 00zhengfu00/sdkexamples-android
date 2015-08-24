@@ -107,6 +107,13 @@ public class SettingsFragment extends Fragment implements OnClickListener {
 	
 	private LinearLayout userProfileContainer;
 	
+
+	/**
+	 * 搜索历史记录
+	 */
+	
+	private LinearLayout searchHistory;
+	
 	/**
 	 * 退出按钮
 	 */
@@ -170,6 +177,7 @@ public class SettingsFragment extends Fragment implements OnClickListener {
 		userProfileContainer = (LinearLayout) getView().findViewById(R.id.ll_user_profile);
 		llDiagnose=(LinearLayout) getView().findViewById(R.id.ll_diagnose);
 		pushNick=(LinearLayout) getView().findViewById(R.id.ll_set_push_nick);
+		searchHistory = (LinearLayout)getView().findViewById(R.id.ll_search_history);
 		
 		blacklistContainer.setOnClickListener(this);
 		userProfileContainer.setOnClickListener(this);
@@ -181,6 +189,7 @@ public class SettingsFragment extends Fragment implements OnClickListener {
 		llDiagnose.setOnClickListener(this);
 		pushNick.setOnClickListener(this);
 		rl_switch_chatroom_leave.setOnClickListener(this);
+		searchHistory.setOnClickListener(this);
 		
 		chatOptions = EMChatManager.getInstance().getChatOptions();
 		
@@ -339,6 +348,9 @@ public class SettingsFragment extends Fragment implements OnClickListener {
 			break;
 		case R.id.ll_user_profile:
 			startActivity(new Intent(getActivity(), UserProfileActivity.class).putExtra("setting", true));
+			break;
+		case R.id.ll_search_history:
+			startActivity(new Intent(getActivity(), KeywordSearching1Activity.class));
 			break;
 		default:
 			break;

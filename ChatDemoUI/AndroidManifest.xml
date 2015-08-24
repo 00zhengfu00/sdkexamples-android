@@ -30,14 +30,14 @@
     <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
-    <permission android:name="com.easemob.chatuidemo.permission.C2D_MESSAGE"
+    <permission
+        android:name="com.easemob.chatuidemo.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
+
     <uses-permission android:name="com.easemob.chatuidemo.permission.C2D_MESSAGE" />
-    
-    
+
     <application
         android:name="DemoApplication"
         android:allowBackup="true"
@@ -67,16 +67,16 @@
         <activity
             android:name=".activity.LoginActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide" 
-            android:windowSoftInputMode="adjustResize|stateVisible">
+            android:theme="@style/horizontal_slide"
+            android:windowSoftInputMode="adjustResize|stateVisible" >
         </activity>
 
         <!-- 注册 -->
         <activity
             android:name=".activity.RegisterActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/horizontal_slide" 
-            android:windowSoftInputMode="adjustResize|stateVisible">
+            android:theme="@style/horizontal_slide"
+            android:windowSoftInputMode="adjustResize|stateVisible" >
         </activity>
         <!-- 聊天页面 -->
         <activity
@@ -90,8 +90,8 @@
         <activity
             android:name=".activity.AddContactActivity"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateVisible"
-            android:theme="@style/horizontal_slide" >
+            android:theme="@style/horizontal_slide"
+            android:windowSoftInputMode="stateVisible" >
         </activity>
         <!-- 群组详情 -->
         <activity
@@ -106,7 +106,6 @@
             android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="adjustPan" >
         </activity>
-        
         <activity
             android:name=".activity.ChatRoomActivity"
             android:screenOrientation="portrait"
@@ -119,7 +118,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/horizontal_slide" >
         </activity>
-        
+
         <!-- 新建群组 -->
         <activity
             android:name=".activity.NewGroupActivity"
@@ -198,27 +197,26 @@
             android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="adjustPan" >
         </activity>
-        
         <activity
             android:name=".activity.PublicChatRoomsActivity"
             android:screenOrientation="portrait"
             android:theme="@style/horizontal_slide"
             android:windowSoftInputMode="adjustPan" >
         </activity>
-        
+
         <!-- 语音通话 -->
         <activity
             android:name=".activity.VoiceCallActivity"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/nornal_style" >
         </activity>
         <!-- 视频通话 -->
         <activity
             android:name=".activity.VideoCallActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:theme="@style/horizontal_slide" >
         </activity>
         <!-- 群聊简单信息 -->
@@ -279,18 +277,33 @@
             android:windowSoftInputMode="stateAlwaysHidden" >
         </activity>
         <!-- robots list -->
-        <activity 
+        <activity
             android:name=".activity.RobotsActivity"
             android:screenOrientation="portrait"
             android:theme="@style/horizontal_slide"
-            android:windowSoftInputMode="stateAlwaysHidden"
-            ></activity>
+            android:windowSoftInputMode="stateAlwaysHidden" >
+        </activity>
         <!-- user profile -->
-		<activity 
-		    android:name=".activity.UserProfileActivity"
-		    android:screenOrientation="portrait"
-		    android:theme="@style/horizontal_slide"
-		    ></activity>
+        <activity
+            android:name=".activity.UserProfileActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/horizontal_slide" >
+        </activity>
+        <activity
+            android:name=".activity.KeywordSearching1Activity"
+            android:screenOrientation="portrait"
+            android:theme="@style/horizontal_slide" >
+        </activity>
+        <activity
+            android:name=".activity.KeywordSearching2Activity"
+            android:screenOrientation="portrait"
+            android:theme="@style/horizontal_slide" >
+        </activity>
+        <activity
+            android:name=".activity.SearchingConversationActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/horizontal_slide" >
+        </activity>
 
         <!-- 开机自启动服务 -->
         <receiver android:name="com.easemob.chat.StartServiceReceiver" >
@@ -301,7 +314,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </receiver>
-        
+
         <!-- gcm start -->
         <receiver
             android:name="com.easemob.chat.EMGCMBroadcastReceiver"
@@ -309,45 +322,50 @@
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+
                 <category android:name="com.easemob.chatuidemo" />
             </intent-filter>
         </receiver>
 
-        <service android:name="com.easemob.chat.EMGCMListenerService"
+        <service
+            android:name="com.easemob.chat.EMGCMListenerService"
             android:exported="false" >
         </service>
-        
-        <receiver 
+
+        <receiver
             android:name="com.easemob.chatuidemo.receiver.GCMPushBroadCast"
-            android:exported="false">
-            <intent-filter >
-                <action android:name="com.easemob.sdk.push"/>
-                <category android:name="com.easemob.chatuidemo"/>
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.easemob.sdk.push" />
+
+                <category android:name="com.easemob.chatuidemo" />
             </intent-filter>
         </receiver>
         <!-- gcm end -->
+
 
         <!-- 设置环信应用的appkey -->
         <meta-data
             android:name="EASEMOB_APPKEY"
             android:value="easemob-demo#chatdemoui" />
         <!-- 声明sdk所需的service -->
-        <service android:name="com.easemob.chat.EMChatService"/>
+        <service android:name="com.easemob.chat.EMChatService" />
         <!-- 声明sdk所需的receiver -->
-        <receiver android:name="com.easemob.chat.EMMonitorReceiver">
+        <receiver android:name="com.easemob.chat.EMMonitorReceiver" >
             <intent-filter>
-                <action android:name="android.intent.action.PACKAGE_REMOVED"/>
-                <data android:scheme="package"/>
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme="package" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
 
         <!-- 百度地图所需的service -->
         <service
-            android:name="com.baidu.location.f" 
+            android:name="com.baidu.location.f"
             android:enabled="true"
             android:process=":remote" />
         <!-- umeng appkey，可忽略 -->
@@ -358,7 +376,6 @@
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="3ecea51f560650b1ed8a4b99808f52e8" />
-        
-          </application>
+    </application>
 
 </manifest>

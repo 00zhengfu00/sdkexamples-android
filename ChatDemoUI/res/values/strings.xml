@@ -278,6 +278,7 @@
     <string name="illegal_user_name">Illegal user name</string>
     <string name="robot_chat">Robot chat</string>
     <string name="title_user_profile">User Profile</string>
+    <string name="title_search_history">Search history</string>
     <string name="nickname">NickName</string>
     <string name="dl_title_upload_photo">Upload Photo</string>
     <string name="dl_msg_local_upload">Local Upload</string>

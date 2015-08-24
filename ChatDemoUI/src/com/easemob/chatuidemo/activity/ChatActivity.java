@@ -44,6 +44,7 @@ import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -335,10 +336,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		                                         List<EMMessage> messages;
 		                                         try {
 	                                                 if (chatType == CHATTYPE_SINGLE){
-                                                         messages = conversation.loadMoreMsgFromDB(adapter.getItem(0).getMsgId(), pagesize);
+                                                		 messages = conversation.loadMoreMsgFromDB(adapter.getItem(0).getMsgId(), pagesize);
 	                                                 }
 	                                                 else{
-                                                         messages = conversation.loadMoreGroupMsgFromDB(adapter.getItem(0).getMsgId(), pagesize);
+                                                		 messages = conversation.loadMoreGroupMsgFromDB(adapter.getItem(0).getMsgId(), pagesize);
 	                                                 }
 		                                         } catch (Exception e1) {
 	                                                 swipeRefreshLayout.setRefreshing(false);
@@ -376,9 +377,10 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		wakeLock = ((PowerManager) getSystemService(Context.POWER_SERVICE)).newWakeLock(
 				PowerManager.SCREEN_DIM_WAKE_LOCK, "demo");
+		
 		// 判断单聊还是群聊
 		chatType = getIntent().getIntExtra("chatType", CHATTYPE_SINGLE);
-
+		
 		if (chatType == CHATTYPE_SINGLE) { // 单聊
 			toChatUsername = getIntent().getStringExtra("userId");
 			Map<String,RobotUser> robotMap=((DemoHXSDKHelper)HXSDKHelper.getInstance()).getRobotList();
@@ -424,32 +426,33 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	}
 
 	protected void onConversationInit(){
-	    if(chatType == CHATTYPE_SINGLE){
-	        conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.Chat);
-	    }else if(chatType == CHATTYPE_GROUP){
-	        conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.GroupChat);
-	    }else if(chatType == CHATTYPE_CHATROOM){
-	        conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.ChatRoom);
-	    }
+		if(chatType == CHATTYPE_SINGLE){
+			conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.Chat);
+		}else if(chatType == CHATTYPE_GROUP){
+			conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.GroupChat);
+		}else if(chatType == CHATTYPE_CHATROOM){
+			conversation = EMChatManager.getInstance().getConversationByType(toChatUsername,EMConversationType.ChatRoom);
+		}
+			
 	     
         // 把此会话的未读数置为0
         conversation.markAllMessagesAsRead();
 
-        // 初始化db时，每个conversation加载数目是getChatOptions().getNumberOfMessagesLoaded
-        // 这个数目如果比用户期望进入会话界面时显示的个数不一样，就多加载一些
-        final List<EMMessage> msgs = conversation.getAllMessages();
-        int msgCount = msgs != null ? msgs.size() : 0;
-        if (msgCount < conversation.getAllMsgCount() && msgCount < pagesize) {
-            String msgId = null;
-            if (msgs != null && msgs.size() > 0) {
-                msgId = msgs.get(0).getMsgId();
-            }
-            if (chatType == CHATTYPE_SINGLE) {
-                conversation.loadMoreMsgFromDB(msgId, pagesize);
-            } else {
-                conversation.loadMoreGroupMsgFromDB(msgId, pagesize);
-            }
-        }
+	// 初始化db时，每个conversation加载数目是getChatOptions().getNumberOfMessagesLoaded
+       // 这个数目如果比用户期望进入会话界面时显示的个数不一样，就多加载一些
+       final List<EMMessage> msgs = conversation.getAllMessages();
+       int msgCount = msgs != null ? msgs.size() : 0;
+       if (msgCount < conversation.getAllMsgCount() && msgCount < pagesize) {
+           String msgId = null;
+           if (msgs != null && msgs.size() > 0) {
+               msgId = msgs.get(0).getMsgId();
+           }
+           if (chatType == CHATTYPE_SINGLE) {
+               conversation.loadMoreMsgFromDB(msgId, pagesize);
+           } else {
+               conversation.loadMoreGroupMsgFromDB(msgId, pagesize);
+           }
+       }
         
         EMChatManager.getInstance().addChatRoomChangeListener(new EMChatRoomChangeListener(){
 
@@ -1646,6 +1649,7 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 					isloading = false;
 
 				}*/
+				
 				break;
 			}
 		}
