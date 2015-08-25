@@ -4,18 +4,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMMessage;
 import com.easemob.chat.TextMessageBody;
 import com.easemob.chatuidemo.R;
-import com.google.android.gms.internal.el;
 
 import android.content.Context;
 import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
+import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,12 +30,15 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 	private int type = 1;
 	private String keyword;
 	private long count;
-	public List<Long> counts = new ArrayList<Long>();; 
+	public List<Long> counts = new ArrayList<Long>();
+	private List<Map.Entry<Pair<String, Long>, EMMessage> > entriesList;
+	private EMMessage message;
 	
-	public KeywordSearchingAdapter(Context context, List<EMMessage> msgsList,String keyword){
+	public KeywordSearchingAdapter(Context context, List<Map.Entry<Pair<String, Long>, EMMessage> > entriesList,String keyword){
 		this.mContext = context;
-		this.msgsList = msgsList;
 		this.keyword = keyword;
+		this.entriesList = entriesList;
+		
 	}
 	public KeywordSearchingAdapter(Context context, List<EMMessage> msgsList,String keyword,int type){
 		this.mContext = context;
@@ -46,11 +50,17 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 
 	@Override
 	public int getCount() {
+		if (type == 1) {
+			return entriesList.size();
+		}
 		return msgsList.size();
 	}
 
 	@Override
 	public Object getItem(int position) {
+		if(type == 1){
+			return entriesList.get(position);
+		}
 		return msgsList.get(position);
 	}
 
@@ -81,8 +91,11 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
-		
-		EMMessage message = msgsList.get(position);
+		if (type == 1) {
+			 message = entriesList.get(position).getValue();
+		}else {
+			 message = msgsList.get(position);
+		}
 		String messagContent = ((TextMessageBody)(message.getBody())).getMessage();
 		int changeTextColor;
 		ForegroundColorSpan greenSpan = new ForegroundColorSpan(Color.GREEN);
@@ -93,15 +106,10 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 		}
 		if(type == 1){
 			holder.textTime.setVisibility(View.GONE);
-			count = EMChatManager.getInstance().countMessageByKeyword(message, keyword);
-			counts.add(count);
+			count = entriesList.get(position).getKey().second;
 			
 			if(message.getChatType() == EMMessage.ChatType.Chat){
-				if(message.getFrom().equals(EMChatManager.getInstance().getCurrentUser())){
-					holder.textNick.setText(message.getTo());
-				}else {
-					holder.textNick.setText(message.getFrom());
-				}
+					holder.textNick.setText(entriesList.get(position).getKey().first);
 				if(count == 1){
 					holder.textContent.setText(builder);
 				}else {
@@ -113,8 +121,9 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 					holder.textContent.setText(builder);
 				}else {
 					holder.textContent.setText(count + "条相关的聊天记录");
+					Log.i("info", "message body:"+message.getBody());
 				}
-				holder.textNick.setText(message.getTo());
+				holder.textNick.setText(entriesList.get(position).getKey().first);
 			}
 		}else {
 			if(message.getChatType() == EMMessage.ChatType.Chat){

@@ -1,7 +1,9 @@
 package com.easemob.chatuidemo.activity;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMMessage;
@@ -13,6 +15,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -24,8 +27,8 @@ public class KeywordSearching1Activity extends BaseActivity {
 	EditText searchContent;
 	ListView listView;
 	private KeywordSearchingAdapter adapter;
-	List<EMMessage> msgsList;
 	private String keyword;
+	private List<Map.Entry<Pair<String, Long>, EMMessage>> entriesList;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -34,19 +37,23 @@ public class KeywordSearching1Activity extends BaseActivity {
 		searchContent = (EditText) findViewById(R.id.et_search_content);
 		listView = (ListView) findViewById(R.id.listview);
 
-		msgsList = new ArrayList<EMMessage>();
+		entriesList = new ArrayList<Map.Entry<Pair<String,Long>,EMMessage>>();
 		searchContent.addTextChangedListener(new TextWatcher() {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before,int count) {
-				msgsList.clear();
+				entriesList.clear();
 				if(TextUtils.isEmpty(s.toString())){
 					adapter.notifyDataSetChanged();
 					return;
 				}
 				keyword = s.toString();
-				msgsList.addAll(EMChatManager.getInstance().findConversationByKeyword(s.toString()));
-				adapter = new KeywordSearchingAdapter(KeywordSearching1Activity.this,msgsList,s.toString());
+				Iterator<Map.Entry<Pair<String, Long>,EMMessage>> iterator = EMChatManager.getInstance().findConversationByKeyword(keyword.toString()).entrySet().iterator();
+				while (iterator.hasNext()) {
+					Map.Entry<Pair<String, Long>, EMMessage> entry = iterator.next();
+					entriesList.add(entry);
+				}
+				adapter = new KeywordSearchingAdapter(KeywordSearching1Activity.this,entriesList,s.toString());
 				listView.setAdapter(adapter);
 			}
 
@@ -67,36 +74,31 @@ public class KeywordSearching1Activity extends BaseActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				EMMessage message = msgsList.get(position);
+				EMMessage message = entriesList.get(position).getValue();
 				Intent intent = new Intent();
-				if(adapter.counts.get(position) == 1){
+				if(entriesList.get(position).getKey().second == 1){
 					intent.setClass(KeywordSearching1Activity.this, SearchingConversationActivity.class);
 					if (message.getChatType() == EMMessage.ChatType.Chat) {
-						intent.putExtra("userId",message.getFrom());
+						intent.putExtra("userId",entriesList.get(position).getKey().first);
 						intent.putExtra("msgId",message.getMsgId());
 						intent.putExtra("chatType", 1);
 					} else {
-						intent.putExtra("groupId",message.getTo());
+						intent.putExtra("groupId",entriesList.get(position).getKey().first);
 						intent.putExtra("msgId",message.getMsgId());
 						intent.putExtra("chatType", 2);
 					}
 				}else {
 					intent.setClass(KeywordSearching1Activity.this, KeywordSearching2Activity.class);
 					if(message.getChatType() == EMMessage.ChatType.Chat){
-						if(message.direct == EMMessage.Direct.RECEIVE){
-							intent.putExtra("name",message.getFrom());
-							intent.putExtra("chattype", EMMessage.ChatType.Chat);
-						}else {
-							intent.putExtra("name",message.getTo());
-							intent.putExtra("chattype", EMMessage.ChatType.Chat);
-						}
+						intent.putExtra("name",entriesList.get(position).getKey().first);
+						intent.putExtra("chattype", EMMessage.ChatType.Chat);
 					}else {
-						intent.putExtra("name",message.getTo());
+						intent.putExtra("name",entriesList.get(position).getKey().first);
 						intent.putExtra("chattype", EMMessage.ChatType.GroupChat);
 						
 					}
 					intent.putExtra("keyword", keyword);
-					intent.putExtra("count", adapter.counts.get(position));
+					intent.putExtra("count", entriesList.get(position).getKey().second);
 				}
 				
 				

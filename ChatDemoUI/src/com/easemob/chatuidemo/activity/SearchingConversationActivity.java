@@ -34,13 +34,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -175,7 +172,7 @@ public class SearchingConversationActivity extends BaseActivity {
 
 		}
 
-		EMChatManager.getInstance().loadSearchingRecord(toChatUsername,
+		EMChatManager.getInstance().createSearchingRecordConversation(toChatUsername,
 				matchMsgId);
 
 		if (chatType == CHATTYPE_SINGLE) {
@@ -410,15 +407,14 @@ public class SearchingConversationActivity extends BaseActivity {
 		@Override
 		public void onScroll(AbsListView view, int firstVisibleItem,
 				int visibleItemCount, int totalItemCount) {
-			// TODO Auto-generated method stub
 
 		}
 	}
 
 	@Override
-	protected void onPause() {
-		super.onPause();
-		EMChatManager.getInstance().loadAllConversations();
+	public void onBackPressed() {
+		EMChatManager.getInstance().retrieveConversation(toChatUsername);
+		super.onBackPressed();
 	}
 
 	public String getToChatUsername() {
