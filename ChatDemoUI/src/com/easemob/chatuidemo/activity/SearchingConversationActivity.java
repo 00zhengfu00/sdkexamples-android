@@ -246,7 +246,6 @@ public class SearchingConversationActivity extends BaseActivity {
 		if (resultCode == RESULT_OK) {
 			if (conversation.getMsgCount() > 0) {
 				adapter.refresh();
-				setResult(RESULT_OK);
 			}
 		}
 	}
@@ -346,7 +345,7 @@ public class SearchingConversationActivity extends BaseActivity {
 	 * @param view
 	 */
 	public void back(View view) {
-		finish();
+		onBackPressed();
 	}
 
 	/**
