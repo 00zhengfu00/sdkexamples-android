@@ -172,6 +172,7 @@ public class SearchingConversationActivity extends BaseActivity {
 
 		}
 
+		//生成搜索会话
 		EMChatManager.getInstance().createSearchingRecordConversation(toChatUsername,
 				matchMsgId);
 
@@ -412,6 +413,7 @@ public class SearchingConversationActivity extends BaseActivity {
 
 	@Override
 	public void onBackPressed() {
+		//结束搜索会话
 		EMChatManager.getInstance().retrieveConversation(toChatUsername);
 		super.onBackPressed();
 	}
