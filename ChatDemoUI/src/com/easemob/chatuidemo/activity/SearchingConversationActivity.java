@@ -21,6 +21,7 @@ import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMConversation.EMConversationType;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
+import com.easemob.chat.EMKeywordSearchService;
 import com.easemob.chat.EMMessage;
 import com.easemob.chat.EMMessage.ChatType;
 import com.easemob.chat.ImageMessageBody;
@@ -109,14 +110,7 @@ public class SearchingConversationActivity extends BaseActivity {
 								&& !isUpLoading && haveMoreUpData) {
 							List<EMMessage> messages;
 							try {
-								if (chatType == CHATTYPE_SINGLE) {
-									messages = conversation.loadMoreMsgFromDB(adapter.getItem(0).getMsgId(),pagesize);
-								} else {
-									messages = conversation
-											.loadMoreGroupMsgFromDB(adapter
-													.getItem(0).getMsgId(),
-													pagesize);
-								}
+								messages = conversation.loadMoreMessages(false, adapter.getItem(0).getMsgId(),pagesize);
 							} catch (Exception e1) {
 								swipeRefreshLayout.setRefreshing(false);
 								return;
@@ -172,41 +166,21 @@ public class SearchingConversationActivity extends BaseActivity {
 
 		}
 
-		//生成搜索会话
-		EMChatManager.getInstance().createSearchingRecordConversation(toChatUsername,
-				matchMsgId);
-
 		if (chatType == CHATTYPE_SINGLE) {
-			conversation = EMChatManager.getInstance().getConversationByType(
-					toChatUsername, EMConversationType.Chat);
+			conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername, matchMsgId, false);
 		} else if (chatType == CHATTYPE_GROUP) {
-			conversation = EMChatManager.getInstance().getConversationByType(
-					toChatUsername, EMConversationType.GroupChat);
+			conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername, matchMsgId, true);
 		}
 
-		// 初始化db时，每个conversation加载数目是getChatOptions().getNumberOfMessagesLoaded
-		// 这个数目如果比用户期望进入会话界面时显示的个数不一样，就多加载一些
-		final List<EMMessage> msgs = conversation.getAllMessages();
-		int msgCount = msgs != null ? msgs.size() : 0;
-		if (msgCount < conversation.getAllMsgCount() && msgCount < pagesize) {
-			String msgId = null;
-			if (msgs != null && msgs.size() > 0) {
-				msgId = msgs.get(0).getMsgId();
-			}
-			if (chatType == CHATTYPE_SINGLE) {
-				conversation.loadMoreMsgFromDB(msgId, pagesize);
-			} else {
-				conversation.loadMoreGroupMsgFromDB(msgId, pagesize);
-			}
-		}
+		conversation.loadMoreMessages(true,matchMsgId, pagesize);
 
 		adapter = new SearchingConversationAdapter(
-				SearchingConversationActivity.this, toChatUsername, chatType);
+				SearchingConversationActivity.this, toChatUsername, chatType, conversation);
 		// 显示消息
 		listView.setAdapter(adapter);
 
 		listView.setOnScrollListener(new ListScrollListener());
-		adapter.refreshSelectLast();
+		adapter.refresh();
 
 		// show forward message if the message is not null
 		String forward_msg_id = getIntent().getStringExtra("forward_msg_id");
@@ -346,7 +320,7 @@ public class SearchingConversationActivity extends BaseActivity {
 	 * @param view
 	 */
 	public void back(View view) {
-		onBackPressed();
+		finish();
 	}
 
 	/**
@@ -362,18 +336,10 @@ public class SearchingConversationActivity extends BaseActivity {
 
 				if (view.getLastVisiblePosition() == conversation.getAllMessages().size()-1 && !isDownLoading && haveMoreDownData && conversation.getAllMessages().size() != 0) {
 					isDownLoading = true;
-					// sdk初始化加载的聊天记录为20条，到顶时去db里获取更多
 					List<EMMessage> messages;
 					String msgid = conversation.getAllMessages().get(conversation.getAllMessages().size()-1).getMsgId();
 					try {
-						// 获取更多messges，调用此方法的时候从db获取的messages
-						// sdk会自动存入到此conversation中
-						if (chatType == CHATTYPE_SINGLE)
-							messages = conversation.loadMoreMessages(true,
-									msgid, pagesize);
-						else
-							messages = conversation.loadMoreGroupMessages(true,
-									msgid, pagesize);
+						messages = conversation.loadMoreMessages(true,msgid, pagesize);
 					} catch (Exception e1) {
 						return;
 					}
@@ -409,13 +375,6 @@ public class SearchingConversationActivity extends BaseActivity {
 				int visibleItemCount, int totalItemCount) {
 
 		}
-	}
-
-	@Override
-	public void onBackPressed() {
-		//结束搜索会话
-		EMChatManager.getInstance().retrieveConversation(toChatUsername);
-		super.onBackPressed();
 	}
 
 	public String getToChatUsername() {

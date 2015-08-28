@@ -133,12 +133,12 @@ public class SearchingConversationAdapter extends BaseAdapter{
 
 	private Map<String, Timer> timers = new Hashtable<String, Timer>();
 
-	public SearchingConversationAdapter(Context context, String username, int chatType) {
+	public SearchingConversationAdapter(Context context, String username, int chatType , EMConversation conversation) {
 		this.username = username;
 		this.context = context;
 		inflater = LayoutInflater.from(context);
 		activity = (Activity) context;
-		this.conversation = EMChatManager.getInstance().getConversation(username);
+		this.conversation = conversation;
 	}
 	
 	Handler handler = new Handler() {

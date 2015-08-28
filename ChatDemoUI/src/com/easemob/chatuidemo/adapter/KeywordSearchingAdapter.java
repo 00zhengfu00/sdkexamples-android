@@ -4,8 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
+import com.easemob.chat.EMKeywordSearchService.KeywordSearchInfo;
 import com.easemob.chat.EMMessage;
 import com.easemob.chat.TextMessageBody;
 import com.easemob.chatuidemo.R;
@@ -15,8 +15,6 @@ import android.graphics.Color;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,13 +29,13 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 	private String keyword;
 	private long count;
 	public List<Long> counts = new ArrayList<Long>();
-	private List<Map.Entry<Pair<String, Long>, EMMessage> > entriesList;
+	private List<KeywordSearchInfo > list;
 	private EMMessage message;
 	
-	public KeywordSearchingAdapter(Context context, List<Map.Entry<Pair<String, Long>, EMMessage> > entriesList,String keyword){
+	public KeywordSearchingAdapter(Context context, List<KeywordSearchInfo > list,String keyword){
 		this.mContext = context;
 		this.keyword = keyword;
-		this.entriesList = entriesList;
+		this.list = list;
 		
 	}
 	public KeywordSearchingAdapter(Context context, List<EMMessage> msgsList,String keyword,int type){
@@ -51,7 +49,7 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 	@Override
 	public int getCount() {
 		if (type == 1) {
-			return entriesList.size();
+			return list.size();
 		}
 		return msgsList.size();
 	}
@@ -59,7 +57,7 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 	@Override
 	public Object getItem(int position) {
 		if(type == 1){
-			return entriesList.get(position);
+			return list.get(position);
 		}
 		return msgsList.get(position);
 	}
@@ -92,7 +90,7 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 			holder = (ViewHolder) convertView.getTag();
 		}
 		if (type == 1) {
-			 message = entriesList.get(position).getValue();
+			 message = list.get(position).getMessage();
 		}else {
 			 message = msgsList.get(position);
 		}
@@ -106,10 +104,10 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 		}
 		if(type == 1){
 			holder.textTime.setVisibility(View.GONE);
-			count = entriesList.get(position).getKey().second;
+			count = list.get(position).getCount();
 			
 			if(message.getChatType() == EMMessage.ChatType.Chat){
-					holder.textNick.setText(entriesList.get(position).getKey().first);
+					holder.textNick.setText(list.get(position).getUsername());
 				if(count == 1){
 					holder.textContent.setText(builder);
 				}else {
@@ -121,9 +119,8 @@ public class KeywordSearchingAdapter extends BaseAdapter{
 					holder.textContent.setText(builder);
 				}else {
 					holder.textContent.setText(count + "条相关的聊天记录");
-					Log.i("info", "message body:"+message.getBody());
 				}
-				holder.textNick.setText(entriesList.get(position).getKey().first);
+				holder.textNick.setText(list.get(position).getUsername());
 			}
 		}else {
 			if(message.getChatType() == EMMessage.ChatType.Chat){
