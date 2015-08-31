@@ -82,15 +82,7 @@ public class KeywordSearching1Activity extends BaseActivity {
 				if (list.get(position).getCount() == 1) {
 					intent.setClass(KeywordSearching1Activity.this,
 							SearchingConversationActivity.class);
-					if (message.getChatType() == EMMessage.ChatType.Chat) {
-						intent.putExtra("userId", list.get(position).getUsername());
-						intent.putExtra("msgId", message.getMsgId());
-						intent.putExtra("chatType", 1);
-					} else {
-						intent.putExtra("groupId", list.get(position).getUsername());
-						intent.putExtra("msgId", message.getMsgId());
-						intent.putExtra("chatType", 2);
-					}
+					intent.putExtra("message", message);
 				} else {
 					intent.setClass(KeywordSearching1Activity.this,
 							KeywordSearching2Activity.class);

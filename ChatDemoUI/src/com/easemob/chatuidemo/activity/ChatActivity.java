@@ -420,8 +420,13 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	        String forward_msg_id = getIntent().getStringExtra("forward_msg_id");
 	        if (forward_msg_id != null) {
 	            // 显示发送要转发的消息
-	            forwardMessage(forward_msg_id);
+	            forwardMessage(forward_msg_id,null);
 	        }
+	        
+	        EMMessage message = getIntent().getParcelableExtra("message");
+	        if (message != null) {
+				forwardMessage(null,message);
+			}
 		}
 	}
 
@@ -1679,8 +1684,13 @@ public class ChatActivity extends BaseActivity implements OnClickListener, EMEve
 	 * 
 	 * @param forward_msg_id
 	 */
-	protected void forwardMessage(String forward_msg_id) {
-		final EMMessage forward_msg = EMChatManager.getInstance().getMessage(forward_msg_id);
+	protected void forwardMessage(String forward_msg_id,EMMessage message) {
+		EMMessage forward_msg = null;
+		if (forward_msg_id != null) {
+			forward_msg = EMChatManager.getInstance().getMessage(forward_msg_id);
+		}else {
+			forward_msg = message;
+		}
 		EMMessage.Type type = forward_msg.getType();
 		switch (type) {
 		case TXT:

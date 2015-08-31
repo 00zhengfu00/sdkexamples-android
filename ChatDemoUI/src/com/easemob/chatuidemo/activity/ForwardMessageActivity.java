@@ -16,18 +16,21 @@ package com.easemob.chatuidemo.activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.easemob.chat.EMMessage;
 import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.domain.User;
 
 public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
 	private User selectUser;
 	private String forward_msg_id;
+	private EMMessage message;
 
 	 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		forward_msg_id = getIntent().getStringExtra("forward_msg_id");
+		message = getIntent().getParcelableExtra("forward_msg");
 	}
 	
 	
@@ -58,6 +61,7 @@ public class ForwardMessageActivity extends PickContactNoCheckboxActivity {
 			// it is single chat
 			intent.putExtra("userId", selectUser.getUsername());
 			intent.putExtra("forward_msg_id", forward_msg_id);
+			intent.putExtra("message", message);
 			startActivity(intent);
 			finish();
 

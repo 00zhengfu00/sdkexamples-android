@@ -21,11 +21,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.xmlpull.v1.XmlPullParser;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -133,7 +128,7 @@ public class SearchingConversationAdapter extends BaseAdapter{
 
 	private Map<String, Timer> timers = new Hashtable<String, Timer>();
 
-	public SearchingConversationAdapter(Context context, String username, int chatType , EMConversation conversation) {
+	public SearchingConversationAdapter(Context context, String username, EMConversation conversation) {
 		this.username = username;
 		this.context = context;
 		inflater = LayoutInflater.from(context);
@@ -305,7 +300,6 @@ public class SearchingConversationAdapter extends BaseAdapter{
 		}
 	}
 
-	@SuppressLint("NewApi")
 	public View getView(final int position, View convertView, ViewGroup parent) {
 		final EMMessage message = getItem(position);
 		ChatType chatType = message.getChatType();

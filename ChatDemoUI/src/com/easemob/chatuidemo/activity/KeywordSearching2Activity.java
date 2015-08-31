@@ -65,17 +65,8 @@ public class KeywordSearching2Activity extends Activity{
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				EMMessage message = msgsList.get(position);
-				if (message.getChatType() == EMMessage.ChatType.Chat) {
-					startActivity(new Intent(KeywordSearching2Activity.this,
-							SearchingConversationActivity.class).putExtra("userId",
-							message.getFrom()).putExtra("msgId",
-							message.getMsgId()).putExtra("chatType", 1));
-				} else {
-					startActivity(new Intent(KeywordSearching2Activity.this,
-							SearchingConversationActivity.class).putExtra("groupId",
-							message.getTo()).putExtra("msgId",
-							message.getMsgId()).putExtra("chatType", 2));
-				}
+				startActivity(new Intent(KeywordSearching2Activity.this,
+							SearchingConversationActivity.class).putExtra("message",message));
 			}
 		});
 	}

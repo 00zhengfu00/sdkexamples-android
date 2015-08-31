@@ -13,28 +13,24 @@
  */
 package com.easemob.chatuidemo.activity;
 
-import java.io.File;
 import java.util.List;
 
-import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMConversation;
-import com.easemob.chat.EMConversation.EMConversationType;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
 import com.easemob.chat.EMKeywordSearchService;
 import com.easemob.chat.EMMessage;
-import com.easemob.chat.EMMessage.ChatType;
-import com.easemob.chat.ImageMessageBody;
 import com.easemob.chat.TextMessageBody;
 import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.adapter.SearchingConversationAdapter;
-import com.easemob.chatuidemo.utils.ImageUtils;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
+import android.text.ClipboardManager;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
@@ -52,6 +48,7 @@ public class SearchingConversationActivity extends BaseActivity {
 	public static final int REQUEST_CODE_TEXT = 5;
 	public static final int REQUEST_CODE_PICTURE = 7;
 
+	public static final int RESULT_CODE_COPY = 1;
 	public static final int RESULT_CODE_DELETE = 2;
 	public static final int RESULT_CODE_FORWARD = 3;
 
@@ -59,12 +56,12 @@ public class SearchingConversationActivity extends BaseActivity {
 	public static final int CHATTYPE_GROUP = 2;
 
 	private ListView listView;
-	private int chatType;
 	private EMConversation conversation;
 	// 给谁发送消息
 	private String toChatUsername;
 	private SearchingConversationAdapter adapter;
 
+	private ClipboardManager clipboard;
 	private boolean isUpLoading;
 	private boolean isDownLoading;
 	private final int pagesize = 20;
@@ -74,7 +71,7 @@ public class SearchingConversationActivity extends BaseActivity {
 
 	private SwipeRefreshLayout swipeRefreshLayout;
 	public String playMsgId;
-	private String matchMsgId;
+	private EMMessage message;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +107,7 @@ public class SearchingConversationActivity extends BaseActivity {
 								&& !isUpLoading && haveMoreUpData) {
 							List<EMMessage> messages;
 							try {
-								messages = conversation.loadMoreMessages(false, adapter.getItem(0).getMsgId(),pagesize);
+								messages = conversation.loadMoreMessages(true, adapter.getItem(0).getMsgId(),pagesize);
 							} catch (Exception e1) {
 								swipeRefreshLayout.setRefreshing(false);
 								return;
@@ -143,17 +140,16 @@ public class SearchingConversationActivity extends BaseActivity {
 	}
 
 	private void setUpView() {
+		clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+		
+		message = getIntent().getParcelableExtra("message");
 
-		matchMsgId = getIntent().getStringExtra("msgId");
-		// 判断单聊还是群聊
-		chatType = getIntent().getIntExtra("chatType", CHATTYPE_SINGLE);
-
-		if (chatType == CHATTYPE_SINGLE) { // 单聊
-			toChatUsername = getIntent().getStringExtra("userId");
+		if (message.getChatType() == EMMessage.ChatType.Chat) { // 单聊
+			toChatUsername = message.getFrom();
 			((TextView) findViewById(R.id.name)).setText(toChatUsername);
 		} else {
 			// 群聊
-			toChatUsername = getIntent().getStringExtra("groupId");
+			toChatUsername = message.getTo();
 
 			group = EMGroupManager.getInstance().getGroup(toChatUsername);
 
@@ -163,31 +159,21 @@ public class SearchingConversationActivity extends BaseActivity {
 			} else {
 				((TextView) findViewById(R.id.name)).setText(toChatUsername);
 			}
-
 		}
 
-		if (chatType == CHATTYPE_SINGLE) {
-			conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername, matchMsgId, false);
-		} else if (chatType == CHATTYPE_GROUP) {
-			conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername, matchMsgId, true);
-		}
+		conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername);
+		conversation.addMessage(message);
 
-		conversation.loadMoreMessages(true,matchMsgId, pagesize);
+		conversation.loadMoreMessages(false,message.getMsgId(), pagesize);
 
 		adapter = new SearchingConversationAdapter(
-				SearchingConversationActivity.this, toChatUsername, chatType, conversation);
+				SearchingConversationActivity.this, toChatUsername, conversation);
 		// 显示消息
 		listView.setAdapter(adapter);
 
 		listView.setOnScrollListener(new ListScrollListener());
 		adapter.refresh();
 
-		// show forward message if the message is not null
-		String forward_msg_id = getIntent().getStringExtra("forward_msg_id");
-		if (forward_msg_id != null) {
-			// 显示发送要转发的消息
-			forwardMessage(forward_msg_id);
-		}
 	}
 
 	/**
@@ -197,6 +183,10 @@ public class SearchingConversationActivity extends BaseActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == REQUEST_CODE_CONTEXT_MENU) {
 			switch (resultCode) {
+			case RESULT_CODE_COPY: // 复制消息
+				EMMessage copyMsg = ((EMMessage) adapter.getItem(data.getIntExtra("position", -1)));
+				clipboard.setText(((TextMessageBody) copyMsg.getBody()).getMessage());
+				break;
 			case RESULT_CODE_DELETE: // 删除消息
 				EMMessage deleteMsg = (EMMessage) adapter.getItem(data
 						.getIntExtra("position", -1));
@@ -209,7 +199,9 @@ public class SearchingConversationActivity extends BaseActivity {
 				EMMessage forwardMsg = (EMMessage) adapter.getItem(data
 						.getIntExtra("position", 0));
 				Intent intent = new Intent(this, ForwardMessageActivity.class);
-				intent.putExtra("forward_msg_id", forwardMsg.getMsgId());
+				intent.putExtra("forward_msg", forwardMsg);
+				intent.putExtra("iskeywordsearch", true);
+				
 				startActivity(intent);
 
 				break;
@@ -223,95 +215,6 @@ public class SearchingConversationActivity extends BaseActivity {
 				adapter.refresh();
 			}
 		}
-	}
-
-	/**
-	 * 转发消息
-	 * 
-	 * @param forward_msg_id
-	 */
-	protected void forwardMessage(String forward_msg_id) {
-		final EMMessage forward_msg = EMChatManager.getInstance().getMessage(
-				forward_msg_id);
-		EMMessage.Type type = forward_msg.getType();
-		switch (type) {
-		case TXT:
-			// 获取消息内容，发送消息
-			String content = ((TextMessageBody) forward_msg.getBody())
-					.getMessage();
-			sendText(content);
-			break;
-		case IMAGE:
-			// 发送图片
-			String filePath = ((ImageMessageBody) forward_msg.getBody())
-					.getLocalUrl();
-			if (filePath != null) {
-				File file = new File(filePath);
-				if (!file.exists()) {
-					// 不存在大图发送缩略图
-					filePath = ImageUtils.getThumbnailImagePath(filePath);
-				}
-				sendPicture(filePath);
-			}
-			break;
-		default:
-			break;
-		}
-	}
-
-	/**
-	 * 发送文本消息
-	 * 
-	 * @param content
-	 *            message content
-	 * @param isResend
-	 *            boolean resend
-	 */
-	public void sendText(String content) {
-
-		if (content.length() > 0) {
-			EMMessage message = EMMessage.createSendMessage(EMMessage.Type.TXT);
-			// 如果是群聊，设置chattype,默认是单聊
-			if (chatType == CHATTYPE_GROUP) {
-				message.setChatType(ChatType.GroupChat);
-			}
-			TextMessageBody txtBody = new TextMessageBody(content);
-			// 设置消息body
-			message.addBody(txtBody);
-			// 设置要发给谁,用户username或者群聊groupid
-			message.setReceipt(toChatUsername);
-			// 把messgage加到conversation中
-			conversation.addMessage(message);
-			// 通知adapter有消息变动，adapter会根据加入的这条message显示消息和调用sdk的发送方法
-			adapter.refreshSelectLast();
-
-		}
-	}
-
-	/**
-	 * 发送图片
-	 * 
-	 * @param filePath
-	 */
-	private void sendPicture(final String filePath) {
-		String to = toChatUsername;
-		// create and add image message in view
-		final EMMessage message = EMMessage
-				.createSendMessage(EMMessage.Type.IMAGE);
-		// 如果是群聊，设置chattype,默认是单聊
-		if (chatType == CHATTYPE_GROUP) {
-			message.setChatType(ChatType.GroupChat);
-		}
-
-		message.setReceipt(to);
-		ImageMessageBody body = new ImageMessageBody(new File(filePath));
-		// 默认超过100k的图片会压缩后发给对方，可以设置成发送原图
-		// body.setSendOriginalImage(true);
-		message.addBody(body);
-		conversation.addMessage(message);
-
-		listView.setAdapter(adapter);
-		adapter.refreshSelectLast();
 	}
 
 	/**
@@ -339,7 +242,7 @@ public class SearchingConversationActivity extends BaseActivity {
 					List<EMMessage> messages;
 					String msgid = conversation.getAllMessages().get(conversation.getAllMessages().size()-1).getMsgId();
 					try {
-						messages = conversation.loadMoreMessages(true,msgid, pagesize);
+						messages = conversation.loadMoreMessages(false,msgid, pagesize);
 					} catch (Exception e1) {
 						return;
 					}
@@ -359,12 +262,6 @@ public class SearchingConversationActivity extends BaseActivity {
 					}
 					isDownLoading = false;
 
-				}else {
-					Toast.makeText(
-							SearchingConversationActivity.this,
-							getResources().getString(
-									R.string.no_more_messages),
-							Toast.LENGTH_SHORT).show();
 				}
 				break;
 			}
