@@ -13,11 +13,17 @@
  */
 package com.easemob.chatuidemo;
 
+import java.util.List;
+
+import android.app.ActivityManager;
 import android.app.Application;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
+import android.os.Process;
 
 import com.easemob.EMCallBack;
 import com.easemob.chat.EMChatManager;
+import com.xiaomi.mipush.sdk.MiPushClient;
 
 public class DemoApplication extends Application {
 
@@ -25,6 +31,11 @@ public class DemoApplication extends Application {
 	private static DemoApplication instance;
 	// login user name
 	public final String PREF_USERNAME = "username";
+	
+	 // user your appid the key.
+    public static final String APP_ID = "2882303761517370134";
+    // user your appid the key.
+    public static final String APP_KEY = "5131737040134";
 	
 	/**
 	 * 当前用户nickname,为了苹果推送不是userid而是昵称
@@ -57,11 +68,30 @@ public class DemoApplication extends Application {
          * }
          */
         hxSDKHelper.onInit(applicationContext);
+        
+        //小米推送
+        if (shouldInit()) {
+        	MiPushClient.registerPush(applicationContext, APP_ID, APP_KEY);
+		}
 	}
 
 	public static DemoApplication getInstance() {
 		return instance;
 	}
+	
+	private boolean shouldInit() {
+        ActivityManager am = ((ActivityManager) getSystemService(Context.ACTIVITY_SERVICE));
+        List<RunningAppProcessInfo> processInfos = am.getRunningAppProcesses();
+        String mainProcessName = getPackageName();
+        int myPid = Process.myPid();
+        for (RunningAppProcessInfo info : processInfos) {
+            if (info.pid == myPid && mainProcessName.equals(info.processName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
  
 
 	/**
