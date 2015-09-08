@@ -1,10 +1,12 @@
 package com.easemob.chatuidemo.activity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.easemob.chat.EMKeywordSearchService;
-import com.easemob.chat.EMKeywordSearchService.KeywordSearchInfo;
+import com.easemob.chat.EMChatManager;
+import com.easemob.chat.EMKeywordSearchInfo;
 import com.easemob.chat.EMMessage;
 import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.adapter.KeywordSearchingAdapter;
@@ -28,9 +30,10 @@ public class KeywordSearching1Activity extends BaseActivity {
 	ListView listView;
 	private KeywordSearchingAdapter adapter;
 	private String keyword;
-	private List<KeywordSearchInfo> list;
+	private Map<String,EMKeywordSearchInfo> map;
 	private ProgressBar pb;
 	private TextView tvNull;
+	private List<String> list;
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -41,13 +44,13 @@ public class KeywordSearching1Activity extends BaseActivity {
 		pb = (ProgressBar) findViewById(R.id.progress);
 		tvNull = (TextView) findViewById(R.id.tv_null);
 
-		list = new ArrayList<EMKeywordSearchService.KeywordSearchInfo>();
+		list = new ArrayList<String>();
+		map = new HashMap<String,EMKeywordSearchInfo>();
 		searchContent.addTextChangedListener(new TextWatcher() {
 
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before,
 					int count) {
-				list.clear();
 				keyword = s.toString();
 				if (TextUtils.isEmpty(keyword)) {
 					adapter.notifyDataSetChanged();
@@ -63,12 +66,11 @@ public class KeywordSearching1Activity extends BaseActivity {
 			@Override
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after) {
-
 			}
 
 			@Override
 			public void afterTextChanged(Editable s) {
-
+				
 			}
 		});
 
@@ -77,26 +79,19 @@ public class KeywordSearching1Activity extends BaseActivity {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
-				EMMessage message = list.get(position).getMessage();
+				EMMessage message = map.get(list.get(position)).getMessage();
 				Intent intent = new Intent();
-				if (list.get(position).getCount() == 1) {
+				if (map.get(list.get(position)).getCount() == 1) {
 					intent.setClass(KeywordSearching1Activity.this,
 							SearchingConversationActivity.class);
 					intent.putExtra("message", message);
 				} else {
 					intent.setClass(KeywordSearching1Activity.this,
 							KeywordSearching2Activity.class);
-					if (message.getChatType() == EMMessage.ChatType.Chat) {
-						intent.putExtra("name", list.get(position).getUsername());
-						intent.putExtra("chattype", EMMessage.ChatType.Chat);
-					} else {
-						intent.putExtra("name",list.get(position).getUsername());
-						intent.putExtra("chattype",
-								EMMessage.ChatType.GroupChat);
+					intent.putExtra("name",map.get(list.get(position)).getUsername());
 
-					}
 					intent.putExtra("keyword", keyword);
-					intent.putExtra("count",list.get(position).getCount());
+					intent.putExtra("count",map.get(list.get(position)).getCount());
 				}
 
 				startActivity(intent);
@@ -110,17 +105,22 @@ public class KeywordSearching1Activity extends BaseActivity {
 
 			@Override
 			public void run() {
-				list.addAll(EMKeywordSearchService.getInstance().findConversationByKeyword(keyword));
+				map.clear();
+				list.clear();
+				map.putAll(EMChatManager.getInstance().getKeywordInfoList(keyword));
+				for (String name : map.keySet()) {
+					list.add(name);
+				}
 				runOnUiThread(new Runnable() {
 					public void run() {
-						if (list.size() == 0) {
+						if (map.size() == 0) {
 							tvNull.setVisibility(View.VISIBLE);
 						} else {
 							tvNull.setVisibility(View.GONE);
 						}
 						pb.setVisibility(View.GONE);
 						adapter = new KeywordSearchingAdapter(KeywordSearching1Activity.this,
-								list, keyword);
+								map, keyword);
 						listView.setAdapter(adapter);
 
 					}

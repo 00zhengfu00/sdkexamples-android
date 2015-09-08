@@ -18,7 +18,6 @@ import java.util.List;
 import com.easemob.chat.EMConversation;
 import com.easemob.chat.EMGroup;
 import com.easemob.chat.EMGroupManager;
-import com.easemob.chat.EMKeywordSearchService;
 import com.easemob.chat.EMMessage;
 import com.easemob.chat.TextMessageBody;
 import com.easemob.chatuidemo.R;
@@ -146,10 +145,12 @@ public class SearchingConversationActivity extends BaseActivity {
 
 		if (message.getChatType() == EMMessage.ChatType.Chat) { // 单聊
 			toChatUsername = message.getFrom();
+			conversation = new EMConversation(toChatUsername,false);
 			((TextView) findViewById(R.id.name)).setText(toChatUsername);
 		} else {
 			// 群聊
 			toChatUsername = message.getTo();
+			conversation = new EMConversation(toChatUsername,true);
 
 			group = EMGroupManager.getInstance().getGroup(toChatUsername);
 
@@ -161,7 +162,7 @@ public class SearchingConversationActivity extends BaseActivity {
 			}
 		}
 
-		conversation = EMKeywordSearchService.getInstance().getConversation(toChatUsername);
+		conversation.markAsKeywordSearch();
 		conversation.addMessage(message);
 
 		conversation.loadMoreMessages(false,message.getMsgId(), pagesize);

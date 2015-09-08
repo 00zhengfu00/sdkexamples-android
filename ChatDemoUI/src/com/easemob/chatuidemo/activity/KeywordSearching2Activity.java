@@ -3,9 +3,8 @@ package com.easemob.chatuidemo.activity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.easemob.chat.EMKeywordSearchService;
+import com.easemob.chat.EMChatManager;
 import com.easemob.chat.EMMessage;
-import com.easemob.chat.EMMessage.ChatType;
 import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.adapter.KeywordSearchingAdapter;
 
@@ -27,7 +26,6 @@ public class KeywordSearching2Activity extends Activity{
 	private KeywordSearchingAdapter adapter;
 	List<EMMessage> msgsList;
 	private String name;
-	private EMMessage.ChatType chatType;
 	private String keyword;
 	private LinearLayout showNumberLayout;
 	private TextView showNumberContent;
@@ -39,7 +37,6 @@ public class KeywordSearching2Activity extends Activity{
 		setContentView(R.layout.activity_keyword_searching);
 
 		name = getIntent().getExtras().getString("name");
-		chatType = (ChatType) getIntent().getExtras().getSerializable("chattype");
 		keyword = getIntent().getExtras().getString("keyword");
 		count = getIntent().getExtras().getLong("count");
 		
@@ -54,7 +51,7 @@ public class KeywordSearching2Activity extends Activity{
 		listView = (ListView) findViewById(R.id.listview);
 
 		msgsList = new ArrayList<EMMessage>();
-		msgsList.addAll(EMKeywordSearchService.getInstance().loadMessages(chatType,keyword,null,20,name));
+		msgsList.addAll(EMChatManager.getInstance().getMessagesByKeyword(keyword, null, 20, name));
 		
 		adapter = new KeywordSearchingAdapter(KeywordSearching2Activity.this,msgsList,keyword,2);
 		listView.setAdapter(adapter);
