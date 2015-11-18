@@ -1,5 +1,9 @@
 # EaseMob SDK Examples Android ##
 
+# Deprecated，后续不再维护，使用[https://github.com/easemob/sdkdemoapp3.0_android](https://github.com/easemob/sdkdemoapp3.0_android)替代 #
+
+
+----------
 
 
 ## ChatDemoNonUI (ChatDemoNonUI已不再维护，强烈建议使用ChatDemo)##
