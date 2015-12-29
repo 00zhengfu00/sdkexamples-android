@@ -35,6 +35,7 @@ import com.easemob.chatuidemo.R;
 import com.easemob.chatuidemo.task.LoadLocalBigImgTask;
 import com.easemob.chatuidemo.utils.ImageCache;
 import com.easemob.chatuidemo.widget.photoview.PhotoView;
+import com.easemob.chatuidemo.widget.photoview.PhotoViewAttacher;
 import com.easemob.util.EMLog;
 import com.easemob.util.ImageUtils;
 import com.easemob.util.PathUtil;
@@ -97,9 +98,15 @@ public class ShowBigImage extends BaseActivity {
 			image.setImageResource(default_res);
 		}
 
-		image.setOnClickListener(new OnClickListener() {
+		image.setOnPhotoTapListener(new PhotoViewAttacher.OnPhotoTapListener() {
 			@Override
-			public void onClick(View v) {
+			public void onPhotoTap(View view, float x, float y) {
+				finish();
+			}
+		});
+		image.setOnViewTapListener(new PhotoViewAttacher.OnViewTapListener() {
+			@Override
+			public void onViewTap(View view, float x, float y) {
 				finish();
 			}
 		});
